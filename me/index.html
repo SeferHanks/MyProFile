@@ -42,7 +42,7 @@
             pointer-events: none;
         }
 
-        /* Scanline Filter - ปรับ z-index เป็น 0 เพื่อให้อยู่หลังคอนเทนต์ */
+        /* Scanline Filter */
         .scanline {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -129,7 +129,7 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTENT (z-10 อยู่เหนือเส้น Scanline) -->
+    <!-- MAIN CONTENT -->
     <main class="max-w-5xl mx-auto px-6 py-10 flex-grow flex items-center justify-center z-10 w-full relative">
 
         <section id="about" class="w-full space-y-8">
@@ -146,33 +146,27 @@
                 <div class="cyber-card p-6 rounded-lg text-center cursor-pointer group" onclick="openModal('modal-about')">
                     <div class="w-36 h-36 mx-auto mb-4 rounded-full border-2 border-cyan-400 p-1 relative shadow-[0_0_20px_rgba(0,243,255,0.2)] group-hover:shadow-[0_0_30px_rgba(0,243,255,0.5)] transition">
                         <div class="w-full h-full rounded-full overflow-hidden bg-slate-900">
-                            <!-- 📌 [รูปภาพที่ 1: รูปโปรไฟล์หลักหน้าแรก] -->
-                            <img src="im/71113.jpg" alt="My Avatar" class="w-full h-full object-cover">
+                            <img src="./im/71113.jpg" alt="My Avatar" class="w-full h-full object-cover">
                         </div>
                     </div>
-                    <!-- 📌 [ข้อมูลส่วนตัว: ชื่อหลักหน้าแรก] -->
                     <h3 class="text-lg font-bold text-cyan-300 tracking-wide group-hover:text-white transition">นาย มหรรณพ กัณฑ์โย</h3>
                     <p class="text-cyan-500/80 text-xs mt-2 font-mono">[ คลิกเปิดข้อมูลส่วนตัว ]</p>
                 </div>
 
                 <!-- ข้อมูลย่อ -->
                 <div class="cyber-card p-6 rounded-lg md:col-span-2 space-y-3 flex flex-col justify-center text-sm">
-                    <!-- 📌 [ข้อมูลส่วนตัว: ชื่อเล่น] -->
                     <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
                         <span class="text-cyan-400 font-bold w-28">ชื่อเล่น:</span>
                         <span class="text-slate-200">[ กร ]</span>
                     </div>
-                    <!-- 📌 [ข้อมูลส่วนตัว: การศึกษา] -->
                     <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
                         <span class="text-cyan-400 font-bold w-28">การศึกษา:</span>
                         <span class="text-slate-200">ปวส. 1 (วิทยาลัยอาชีวศึกษานครปฐม)</span>
                     </div>
-                    <!-- 📌 [ข้อมูลส่วนตัว: สายงาน] -->
                     <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
                         <span class="text-cyan-400 font-bold w-28">สายงาน:</span>
                         <span class="text-slate-200">Web Development & Database</span>
                     </div>
-                    <!-- 📌 [ข้อมูลส่วนตัว: สโลแกน] -->
                     <div class="flex items-center gap-2 pt-1">
                         <span class="text-cyan-400 font-bold w-28">สโลแกน:</span>
                         <span class="text-slate-300 italic">"[ กับคนรู้ใจยังไงก็รู้มือ ]"</span>
@@ -203,12 +197,12 @@
 
     </main>
 
-    <!-- FOOTER (z-10) -->
+    <!-- FOOTER -->
     <footer class="border-t border-cyan-900/30 py-4 text-center text-xs text-slate-500 font-mono z-10 relative">
         CYBER_SYSTEM v3.6 | SECURE CONNECTION
     </footer>
 
-    <!-- POPUP MODAL (z-60) -->
+    <!-- POPUP MODAL -->
     <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[60] p-4 md:p-6">
         <div class="cyber-card max-w-4xl w-full p-6 md:p-8 rounded-xl relative border-2 border-cyan-400 max-h-[85vh] overflow-y-auto shadow-[0_0_40px_rgba(0,243,255,0.25)]">
             <button onclick="closeModal()" class="absolute top-4 right-4 text-cyan-400 hover:text-white font-bold text-xs bg-cyan-950/80 px-3 py-1.5 rounded border border-cyan-400/50 hover:bg-cyan-500/30 transition">✕ CLOSE_SYS</button>
@@ -220,7 +214,6 @@
 
     <!-- JAVASCRIPT -->
     <script>
-        // Particle & Thick Cyber Lightning Engine
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -231,7 +224,6 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Neon Particles
         const particles = Array.from({ length: 60 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
@@ -241,7 +233,6 @@
             opacity: Math.random() * 0.6 + 0.2
         }));
 
-        // Lightning State
         let lightning = null;
 
         function createLightning() {
@@ -281,7 +272,6 @@
         function renderEngine() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Render Neon Particles
             particles.forEach(p => {
                 p.x += p.speedX;
                 p.y += p.speedY;
@@ -299,7 +289,6 @@
                 ctx.fill();
             });
 
-            // 2. Render Thick Cyber Lightning Strike
             if (lightning && lightning.life > 0) {
                 ctx.beginPath();
                 ctx.moveTo(lightning.points[0].x, lightning.points[0].y);
@@ -321,7 +310,6 @@
         }
         renderEngine();
 
-        // Navbar & Mobile Menu Logic
         const menuBtn = document.getElementById('menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const openIcon = document.getElementById('menu-icon-open');
@@ -339,17 +327,16 @@
             closeIcon.classList.add('hidden');
         }
 
-        // 📌 [กลุ่มข้อมูลส่วนตัว & รูปภาพทั้งหมดใน Modal Popup]
+        // แก้ไข Path รูปภาพทั้งหมดเป็น Relative Path (./im/...)
         const modalData = {
             'modal-about': `
                 <div class="border-b border-cyan-500/40 pb-3">
                     <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">👤  ABOUTME </h3>
                 </div>
                 <div class="space-y-6 text-sm md:text-base text-slate-200">
-                    <!-- รูปโปรไฟล์ขนาดใหญ่เมื่อกดเปิด Pop-up -->
                     <div class="flex justify-center my-2">
                         <div class="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-cyan-400 p-1.5 shadow-[0_0_35px_rgba(0,243,255,0.6)] relative bg-slate-900 overflow-hidden">
-                            <img src="im/71113.jpg" alt="นาย มหรรณพ กัณฑ์โย" class="w-full h-full object-cover rounded-full">
+                            <img src="./im/71113.jpg" alt="นาย มหรรณพ กัณฑ์โย" class="w-full h-full object-cover rounded-full">
                         </div>
                     </div>
                     <div class="bg-slate-900/80 p-5 rounded-lg border border-cyan-900/60 space-y-3">
@@ -367,14 +354,14 @@
                 <div class="grid md:grid-cols-2 gap-6 text-slate-200">
                     <div class="cyber-card p-4 rounded-xl space-y-3 bg-slate-900/60">
                         <div class="aspect-video bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center relative">
-                            <img src="im/71118.jpg" alt="สิ่งที่ชอบ 1" class="w-full h-full object-cover">
+                            <img src="./im/71118.jpg" alt="สิ่งที่ชอบ 1" class="w-full h-full object-cover">
                         </div>
                         <h4 class="text-lg font-bold text-cyan-300">💻 มีความสนใจในเทคโนโลยีหลากหลายด้าน</h4>
                         <p class="text-xs text-slate-400 leading-relaxed">พัฒนาเว็บไซต์ ปรับแต่งยานยนต์และซอฟแวร์ และการออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ รวมถึงมีความสนใจใน IoT and Network</p>
                     </div>
                     <div class="cyber-card p-4 rounded-xl space-y-3 bg-slate-900/60">
                         <div class="aspect-video bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center relative">
-                             <img src="im/71117.jpg" alt="สิ่งที่ชอบ 2" class="w-full h-full object-cover">
+                             <img src="./im/71117.jpg" alt="สิ่งที่ชอบ 2" class="w-full h-full object-cover">
                         </div>
                         <h4 class="text-lg font-bold text-cyan-300">🏍️ กิจวัตรที่ชอบ</h4>
                         <p class="text-xs text-slate-400 leading-relaxed">ในวันเวลาที่ว่างเว้นจากภารกิจต่างๆ ผมมักทุ่มเทเวลาให้กับการนอน เมื่อนอนจนอิ่มก็จะมีการลุกไปออกกำลังกายแบบแรงต้านเป็นหลักและในหลายโอกาสก็จะไปเรียนรู้ทักษะยานยนต์และเทคโนโลยีต่างๆจบท้ายด้วยการเล่นเกมหรือดูหนังที่ชอบหรือสนใจ</p>
@@ -388,7 +375,7 @@
                 <div class="grid md:grid-cols-2 gap-6">
                     <div class="cyber-card p-5 rounded-xl flex items-center space-x-5 bg-slate-900/60">
                         <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-cyan-400 overflow-hidden flex-shrink-0 bg-slate-950 flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.3)]">
-                            <img src="im/71114.jpg" alt="เพื่อน 1" class="w-full h-full object-cover">
+                            <img src="./im/71114.jpg" alt="เพื่อน 1" class="w-full h-full object-cover">
                         </div>
                         <div class="space-y-1">
                             <h4 class="text-base font-bold text-cyan-300">[ นาย ธนกร อ้นพา ]</h4>
@@ -398,7 +385,7 @@
                     </div>
                     <div class="cyber-card p-5 rounded-xl flex items-center space-x-5 bg-slate-900/60">
                         <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-cyan-400 overflow-hidden flex-shrink-0 bg-slate-950 flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.3)]">
-                            <img src="im/71115.jpg" alt="เพื่อน 2" class="w-full h-full object-cover">
+                            <img src="./im/71115.jpg" alt="เพื่อน 2" class="w-full h-full object-cover">
                         </div>
                         <div class="space-y-1">
                             <h4 class="text-base font-bold text-cyan-300">[ นาย ดนัย ปั้นโพธิ์ทอง ]</h4>
@@ -430,7 +417,7 @@
                     <div class="cyber-card p-5 rounded-xl bg-slate-900/60 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="aspect-video w-full bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center">
-                                <img src="im/71119.jpg" alt="Medimove Project" class="w-full h-full object-cover">
+                                <img src="./im/71119.jpg" alt="Medimove Project" class="w-full h-full object-cover">
                             </div>
                             <h4 class="text-lg font-bold text-cyan-300">Medimove Project</h4>
                             <p class="text-xs text-slate-400 leading-relaxed">ระบบจองยานพาหนะภายในองค์กรโรงพยาบาล ช่วยบริหารจัดการคิวการใช้วิธีเดินทางและติดตามสถานะยานพาหนะ</p>
@@ -444,7 +431,7 @@
                     <div class="cyber-card p-5 rounded-xl bg-slate-900/60 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="aspect-video w-full bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center">
-                                <img src="im/711120.jpg" alt="OVAS2 Project" class="w-full h-full object-cover">
+                                <img src="./im/711120.jpg" alt="OVAS2 Project" class="w-full h-full object-cover">
                             </div>
                             <h4 class="text-lg font-bold text-cyan-300">[ OVAS2 Project ]</h4>
                             <p class="text-xs text-slate-400 leading-relaxed">อัพเกรดจากระบบเดิม medimove demo project ลดความซับซ้อนที่ไม่จำเป็นออกไปและพัฒนาให้ใช้ง่ายขึ้นผ่านตัวช่วยอย่าง Line Developers ที่ช่วยให้ซัพพอร์ตผู้ใช้มากขึ้นและระบบจัดการฐานข้อมูลรูปแบบใหม่ที่ช่วยให้สามารถจัดการข้อมูลได้อย่างมีประสิทธิภาพไม่ว่าจะ Report insert delete update select สามารถทำให้ง่ายขึ้นอย่างมีประสิทธิภาพ</p>
