@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Portfolio // Cyberpunk Lightning Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#030712',
+                            card: '#080e1e',
+                            primary: '#00f3ff',
+                            secondary: '#ff0055',
+                            border: '#162b4d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030712;
+            color: #e2e8f0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+        }
+
+        /* Canvas Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Scanline Filter - ปรับ z-index เป็น 0 เพื่อให้อยู่หลังคอนเทนต์ */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.3) 51%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        /* Cyber Cards & Borders */
+        .cyber-card {
+            background: rgba(8, 14, 30, 0.85);
+            border: 1px solid #162b4d;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+        }
+
+        .cyber-card:hover {
+            border-color: #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3), inset 0 0 10px rgba(0, 243, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        /* Glow Text & Buttons */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.7), 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .glow-btn:hover {
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            background-color: rgba(0, 243, 255, 0.15);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-cyan-500 selection:text-black">
+
+    <canvas id="particle-canvas"></canvas>
+    <div class="scanline"></div>
+
+    <!-- NAVBAR (z-50) -->
+    <nav class="border-b border-cyan-900/40 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-black tracking-widest text-cyan-400 glow-text flex items-center gap-2">
+                <span class="inline-block w-2 h-4 bg-cyan-400 animate-pulse"></span>
+                &lt;PORTFOLIO &gt;
+            </div>
+
+            <!-- Desktop Menu -->
+            <ul class="hidden md:flex space-x-6 text-xs font-bold uppercase tracking-wider">
+                <li><button onclick="openModal('modal-about')" class="hover:text-cyan-400 hover:glow-text transition py-1">01. ประวัติ</button></li>
+                <li><button onclick="openModal('modal-likes')" class="hover:text-cyan-400 hover:glow-text transition py-1">02. สิ่งที่ชอบ</button></li>
+                <li><button onclick="openModal('modal-friends')" class="hover:text-cyan-400 hover:glow-text transition py-1">03. เพื่อนสนิท</button></li>
+                <li><button onclick="openModal('modal-experience')" class="hover:text-cyan-400 hover:glow-text transition py-1">04. ประสบการณ์</button></li>
+                <li><button onclick="openModal('modal-projects')" class="hover:text-cyan-400 hover:glow-text transition py-1">05. ผลงาน</button></li>
+            </ul>
+
+            <!-- Mobile Hamburger Button -->
+            <button id="menu-btn" class="md:hidden text-cyan-400 focus:outline-none p-2 rounded border border-cyan-900/50">
+                <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-cyan-900/30 bg-slate-950/95 px-6 py-4">
+            <ul class="flex flex-col space-y-3 text-xs font-bold uppercase tracking-wider">
+                <li><button onclick="openModal('modal-about'); closeMobileMenu();" class="block w-full text-left text-slate-300 hover:text-cyan-400 py-1">01. ประวัติ</button></li>
+                <li><button onclick="openModal('modal-likes'); closeMobileMenu();" class="block w-full text-left text-slate-300 hover:text-cyan-400 py-1">02. สิ่งที่ชอบ</button></li>
+                <li><button onclick="openModal('modal-friends'); closeMobileMenu();" class="block w-full text-left text-slate-300 hover:text-cyan-400 py-1">03. เพื่อนสนิท</button></li>
+                <li><button onclick="openModal('modal-experience'); closeMobileMenu();" class="block w-full text-left text-slate-300 hover:text-cyan-400 py-1">04. ประสบการณ์</button></li>
+                <li><button onclick="openModal('modal-projects'); closeMobileMenu();" class="block w-full text-left text-slate-300 hover:text-cyan-400 py-1">05. ผลงาน</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT (z-10 อยู่เหนือเส้น Scanline) -->
+    <main class="max-w-5xl mx-auto px-6 py-10 flex-grow flex items-center justify-center z-10 w-full relative">
+
+        <section id="about" class="w-full space-y-8">
+            <div class="border-l-4 border-cyan-400 pl-4 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-black text-cyan-400 tracking-wider glow-text"> MAIN PROFILE </h2>
+                    <p class="text-slate-400 text-xs font-mono mt-1"> </p>
+                </div>
+                <span class="hidden md:inline-block text-xs font-mono text-cyan-500/60 border border-cyan-900/50 px-3 py-1 rounded">LOC: THAILAND</span>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- รูปโปรไฟล์หลัก -->
+                <div class="cyber-card p-6 rounded-lg text-center cursor-pointer group" onclick="openModal('modal-about')">
+                    <div class="w-36 h-36 mx-auto mb-4 rounded-full border-2 border-cyan-400 p-1 relative shadow-[0_0_20px_rgba(0,243,255,0.2)] group-hover:shadow-[0_0_30px_rgba(0,243,255,0.5)] transition">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-slate-900">
+                            <!-- 📌 [รูปภาพที่ 1: รูปโปรไฟล์หลักหน้าแรก] -->
+                            <img src="D:\me\im\71113.jpg" alt="My Avatar" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <!-- 📌 [ข้อมูลส่วนตัว: ชื่อหลักหน้าแรก] -->
+                    <h3 class="text-lg font-bold text-cyan-300 tracking-wide group-hover:text-white transition">นาย มหรรณพ กัณฑ์โย</h3>
+                    <p class="text-cyan-500/80 text-xs mt-2 font-mono">[ คลิกเปิดข้อมูลส่วนตัว ]</p>
+                </div>
+
+                <!-- ข้อมูลย่อ -->
+                <div class="cyber-card p-6 rounded-lg md:col-span-2 space-y-3 flex flex-col justify-center text-sm">
+                    <!-- 📌 [ข้อมูลส่วนตัว: ชื่อเล่น] -->
+                    <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
+                        <span class="text-cyan-400 font-bold w-28">ชื่อเล่น:</span>
+                        <span class="text-slate-200">[ กร ]</span>
+                    </div>
+                    <!-- 📌 [ข้อมูลส่วนตัว: การศึกษา] -->
+                    <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
+                        <span class="text-cyan-400 font-bold w-28">การศึกษา:</span>
+                        <span class="text-slate-200">ปวส. 1 (วิทยาลัยอาชีวศึกษานครปฐม)</span>
+                    </div>
+                    <!-- 📌 [ข้อมูลส่วนตัว: สายงาน] -->
+                    <div class="flex items-center gap-2 border-b border-cyan-900/30 pb-2">
+                        <span class="text-cyan-400 font-bold w-28">สายงาน:</span>
+                        <span class="text-slate-200">Web Development & Database</span>
+                    </div>
+                    <!-- 📌 [ข้อมูลส่วนตัว: สโลแกน] -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <span class="text-cyan-400 font-bold w-28">สโลแกน:</span>
+                        <span class="text-slate-300 italic">"[ กับคนรู้ใจยังไงก็รู้มือ ]"</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ไอคอนเมนูด้านล่าง -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-4">
+                <button onclick="openModal('modal-likes')" class="cyber-card glow-btn p-6 rounded-lg text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="text-4xl md:text-5xl">⭐</div>
+                    <div class="text-sm font-bold text-cyan-400 tracking-wider">สิ่งที่ชอบ</div>
+                </button>
+                <button onclick="openModal('modal-friends')" class="cyber-card glow-btn p-6 rounded-lg text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="text-4xl md:text-5xl">🤖</div>
+                    <div class="text-sm font-bold text-cyan-400 tracking-wider">เพื่อนสนิท</div>
+                </button>
+                <button onclick="openModal('modal-experience')" class="cyber-card glow-btn p-6 rounded-lg text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="text-4xl md:text-5xl">💼</div>
+                    <div class="text-sm font-bold text-cyan-400 tracking-wider">ประสบการณ์</div>
+                </button>
+                <button onclick="openModal('modal-projects')" class="cyber-card glow-btn p-6 rounded-lg text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="text-4xl md:text-5xl">🚀</div>
+                    <div class="text-sm font-bold text-cyan-400 tracking-wider">ผลงาน</div>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER (z-10) -->
+    <footer class="border-t border-cyan-900/30 py-4 text-center text-xs text-slate-500 font-mono z-10 relative">
+        CYBER_SYSTEM v3.6 | SECURE CONNECTION
+    </footer>
+
+    <!-- POPUP MODAL (z-60) -->
+    <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[60] p-4 md:p-6">
+        <div class="cyber-card max-w-4xl w-full p-6 md:p-8 rounded-xl relative border-2 border-cyan-400 max-h-[85vh] overflow-y-auto shadow-[0_0_40px_rgba(0,243,255,0.25)]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-cyan-400 hover:text-white font-bold text-xs bg-cyan-950/80 px-3 py-1.5 rounded border border-cyan-400/50 hover:bg-cyan-500/30 transition">✕ CLOSE_SYS</button>
+            <div id="modal-content" class="space-y-6 pt-2">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Particle & Thick Cyber Lightning Engine
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Neon Particles
+        const particles = Array.from({ length: 60 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 0.5,
+            speedX: (Math.random() - 0.5) * 0.4,
+            speedY: (Math.random() - 0.5) * 0.4,
+            opacity: Math.random() * 0.6 + 0.2
+        }));
+
+        // Lightning State
+        let lightning = null;
+
+        function createLightning() {
+            const startX = Math.random() * canvas.width;
+            const startY = 0;
+            const targetX = startX + (Math.random() - 0.5) * 450;
+            const targetY = canvas.height;
+            
+            const points = [{ x: startX, y: startY }];
+            let currentX = startX;
+            let currentY = startY;
+
+            while (currentY < targetY) {
+                const nextY = currentY + Math.random() * 45 + 20;
+                const nextX = currentX + (Math.random() - 0.5) * 80;
+                points.push({ x: nextX, y: Math.min(nextY, targetY) });
+                currentX = nextX;
+                currentY = nextY;
+            }
+
+            lightning = {
+                points: points,
+                life: 1.0,
+                color: Math.random() > 0.3 ? '#00f3ff' : '#ff0055'
+            };
+        }
+
+        function scheduleNextLightning() {
+            const nextTime = Math.random() * 3000 + 1500;
+            setTimeout(() => {
+                createLightning();
+                scheduleNextLightning();
+            }, nextTime);
+        }
+        scheduleNextLightning();
+
+        function renderEngine() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Render Neon Particles
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 243, 255, ${p.opacity})`;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = '#00f3ff';
+                ctx.fill();
+            });
+
+            // 2. Render Thick Cyber Lightning Strike
+            if (lightning && lightning.life > 0) {
+                ctx.beginPath();
+                ctx.moveTo(lightning.points[0].x, lightning.points[0].y);
+                for (let i = 1; i < lightning.points.length; i++) {
+                    ctx.lineTo(lightning.points[i].x, lightning.points[i].y);
+                }
+                ctx.strokeStyle = lightning.color;
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = lightning.color;
+                ctx.globalAlpha = lightning.life;
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+
+                lightning.life -= 0.07;
+            }
+
+            requestAnimationFrame(renderEngine);
+        }
+        renderEngine();
+
+        // Navbar & Mobile Menu Logic
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const openIcon = document.getElementById('menu-icon-open');
+        const closeIcon = document.getElementById('menu-icon-close');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            openIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        });
+
+        function closeMobileMenu() {
+            mobileMenu.classList.add('hidden');
+            openIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+        }
+
+        // 📌 [กลุ่มข้อมูลส่วนตัว & รูปภาพทั้งหมดใน Modal Popup]
+        const modalData = {
+            'modal-about': `
+                <div class="border-b border-cyan-500/40 pb-3">
+                    <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">👤  ABOUTME </h3>
+                </div>
+                <div class="space-y-6 text-sm md:text-base text-slate-200">
+                    <!-- รูปโปรไฟล์ขนาดใหญ่เมื่อกดเปิด Pop-up -->
+                    <div class="flex justify-center my-2">
+                        <div class="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-cyan-400 p-1.5 shadow-[0_0_35px_rgba(0,243,255,0.6)] relative bg-slate-900 overflow-hidden">
+                            <img src="D:\\me\\im\\71113.jpg" alt="นาย มหรรณพ กัณฑ์โย" class="w-full h-full object-cover rounded-full">
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 p-5 rounded-lg border border-cyan-900/60 space-y-3">
+                        <!-- 📌 [ข้อมูลส่วนตัว: ชื่อ-นามสกุล ใน Modal] -->
+                        <p><b class="text-cyan-400">ชื่อ-นามสกุล:</b> นาย มหรรณพ กัณฑ์โย</p>
+                        <!-- 📌 [ข้อมูลส่วนตัว: การศึกษา ใน Modal] -->
+                        <p><b class="text-cyan-400">ระดับการศึกษา:</b> ประกาศนียบัตรวิชาชีพขั้นสูง ชั้นปีที่ 1 (ปวส. 1)</p>
+                        <!-- 📌 [ข้อมูลส่วนตัว: ความถนัด ใน Modal] -->
+                        <p><b class="text-cyan-400">ความถนัดด้านเทคโนโลยี:</b> Web Development (PHP, HTML,CSS) & Database Management (MySQL, SQL)</p>
+                        <!-- 📌 [ข้อมูลส่วนตัว: จุดมุ่งหมาย ใน Modal] -->
+                        <p><b class="text-cyan-400">จุดมุ่งหมาย:</b> พัฒนาระบบเว็บแอปพลิเคชันที่มีประสิทธิภาพสูง เพื่อตอบโจทย์การใช้งานจริงในองค์กร</p>
+                    </div>
+                </div>
+            `,
+            'modal-likes': `
+                <div class="border-b border-cyan-500/40 pb-3">
+                    <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">⭐  FAVORITES_MODULE </h3>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6 text-slate-200">
+                    <div class="cyber-card p-4 rounded-xl space-y-3 bg-slate-900/60">
+                        <div class="aspect-video bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center relative">
+                            <!-- 📌 [รูปภาพที่ 2: รูปสิ่งที่ชอบ 1] -->
+                            <img src="D:\\me\\im\\71118.jpg" alt="สิ่งที่ชอบ 1" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'text-center p-4\'><span class=\'text-4xl block mb-2\'>💻</span><span class=\'text-xs text-slate-500\'>[ รูปภาพ: like1.jpg ]</span></div>'">
+                        </div>
+                        <h4 class="text-lg font-bold text-cyan-300">💻 มีความสนใจในเทคโนโลยีหลากหลายด้าน</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">พัฒนาเว็บไซต์ ปรับแต่งยานยนต์และซอฟแวร์ และการออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ รวมถึงมีความสนใจในIOT and Network</p>
+                    </div>
+                    <div class="cyber-card p-4 rounded-xl space-y-3 bg-slate-900/60">
+                        <div class="aspect-video bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center relative">
+                            <!-- 📌 [รูปภาพที่ 3: รูปสิ่งที่ชอบ 2] -->
+                             <img src="D:\\me\\im\\71117.jpg" alt="สิ่งที่ชอบ 2" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'text-center p-4\'><span class=\'text-4xl block mb-2\'>🏍️</span><span class=\'text-xs text-slate-500\'>[ รูปภาพ: like2.jpg ]</span></div>'">
+                        </div>
+                        <h4 class="text-lg font-bold text-cyan-300">🏍️ กิจวัตรที่ชอบ</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">ในวันเวลาที่ว่างเว้นจากภารกิจต่างๆ ผมมักทุ่มเทเวลาให้กับการนอน เมื่อนอนจนอิ่มก็จะมีการลุกไปออกกำลังกายแบบแรงต้านเป็นหลักและในหลายโอกาสก็จะไปเรียนรู้ทักษะยานยนต์และเทคโนโลยีต่างๆจบท้ายด้วยการเล่นเกมหรือดูหนังที่ชอบหรือสนใจ</p>
+                    </div>
+                </div>
+            `,
+            'modal-friends': `
+                <div class="border-b border-cyan-500/40 pb-3">
+                    <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">🤖  ALLIES NETWORK </h3>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="cyber-card p-5 rounded-xl flex items-center space-x-5 bg-slate-900/60">
+                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-cyan-400 overflow-hidden flex-shrink-0 bg-slate-950 flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.3)]">
+                            <!-- 📌 [รูปภาพที่ 4: รูปเพื่อนสนิท 1] -->
+                            <img src="D:\\me\\im\\71114.jpg" alt="เพื่อน 1" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<span class=\'text-3xl\'>🤖</span>'">
+                        </div>
+                        <div class="space-y-1">
+                            <!-- 📌 [ข้อมูลส่วนตัว: ชื่อและฉายาเพื่อน 1] -->
+                            <h4 class="text-base font-bold text-cyan-300">[ นาย ธนกร อ้นพา ]</h4>
+                            <p class="text-xs text-slate-400"></p>
+                            <span class="inline-block text-[10px] font-mono bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800 mt-1">STATUS: ONLINE</span>
+                        </div>
+                    </div>
+                    <div class="cyber-card p-5 rounded-xl flex items-center space-x-5 bg-slate-900/60">
+                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-cyan-400 overflow-hidden flex-shrink-0 bg-slate-950 flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.3)]">
+                            <!-- 📌 [รูปภาพที่ 5: รูปเพื่อนสนิท 2] -->
+                            <img src="D:\\me\\im\\71115.jpg" alt="เพื่อน 2" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<span class=\'text-3xl\'>🤖</span>'">
+                        </div>
+                        <div class="space-y-1">
+                            <!-- 📌 [ข้อมูลส่วนตัว: ชื่อและฉายาเพื่อน 2] -->
+                            <h4 class="text-base font-bold text-cyan-300">[ นาย ดนัย ปั้นโพธิ์ทอง ]</h4>
+                            <p class="text-xs text-slate-400"></p>
+                            <span class="inline-block text-[10px] font-mono bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800 mt-1">STATUS: ONLINE</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'modal-experience': `
+                <div class="border-b border-cyan-500/40 pb-3">
+                    <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">💼 04  WORK_LOGS </h3>
+                </div>
+                <div class="space-y-4 text-slate-200">
+                    <div class="cyber-card p-5 rounded-xl bg-slate-900/60 space-y-2">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                            <!-- 📌 [ข้อมูลส่วนตัว: ชื่องาน/ประสบการณ์] -->
+                            <h4 class="text-base font-bold text-cyan-300">พัฒนา Web Application ระบบจองยานพาหนะ (Medimove)</h4>
+                            <span class="text-xs font-mono bg-cyan-950 text-cyan-300 px-3 py-1 rounded border border-cyan-800">2025 - 2026</span>
+                        </div>
+                        <!-- 📌 [ข้อมูลส่วนตัว: รายละเอียดประสบการณ์] -->
+                        <p class="text-xs md:text-sm text-slate-300 mt-2 leading-relaxed">ออกแบบโครงสร้างฐานข้อมูล SQL และพัฒนาฟังก์ชันระบบ Login / การทำตารางจองและอนุมัติยานพาหนะผ่านเว็บแอปพลิเคชันด้วย PHP และศึกษาภาษาคอมพิวเตอร์ หลักการคอมพิวเตอร์ เครือข่าย และเทคโนโลยีใหม่ๆ</p>
+                    </div>
+                </div>
+            `,
+            'modal-projects': `
+                <div class="border-b border-cyan-500/40 pb-3">
+                    <h3 class="text-xl md:text-2xl font-black text-cyan-400 flex items-center gap-3 glow-text">🚀  PROJECT_ARCHIVE </h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-200 items-stretch">
+                    <div class="cyber-card p-5 rounded-xl bg-slate-900/60 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="aspect-video w-full bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center">
+                                <!-- 📌 [รูปภาพที่ 6: รูปผลงานที่ 1] -->
+                                <img src="D:\\me\\im\\71119.jpg" alt="Medimove Project" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'text-center p-4\'><span class=\'text-4xl block mb-2\'>🚀</span><span class=\'text-xs text-slate-500\'>[ รูปผลงาน Medimove ]</span></div>'">
+                            </div>
+                            <!-- 📌 [ข้อมูลส่วนตัว: ชื่อและคำอธิบายผลงาน 1] -->
+                            <h4 class="text-lg font-bold text-cyan-300">Medimove Project</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">ระบบจองยานพาหนะภายในองค์กรโรงพยาบาล ช่วยบริหารจัดการคิวการใช้วิธีเดินทางและติดตามสถานะยานพาหนะ</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-[11px] pt-2">
+                            <span class="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800">PHP</span>
+                            <span class="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800">MySQL</span>
+                        </div>
+                    </div>
+
+                    <div class="cyber-card p-5 rounded-xl bg-slate-900/60 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="aspect-video w-full bg-slate-950 rounded-lg border border-cyan-500/30 overflow-hidden flex items-center justify-center">
+                                <!-- 📌 [รูปภาพที่ 7: รูปผลงานที่ 2] -->
+                                <img src="D:\\me\\im\\711120.jpg" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'text-center p-4\'><span class=\'text-4xl block mb-2\'>⚡</span><span class=\'text-xs text-slate-500\'>[ รูปผลงาน 2 ]</span></div>'">
+                            </div>
+                            <!-- 📌 [ข้อมูลส่วนตัว: ชื่อและคำอธิบายผลงาน 2] -->
+                            <h4 class="text-lg font-bold text-cyan-300">[ OVAS2 Project ]</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">อัพเกรดจากระบบเดิมmedimove demo project ลดความซับซ้อนที่ไม่จำเป็นออกไปและพัฒนาให้ใช้ง่ายขึ้นผ่านตัวช่วยอย่าง Line Developers ที่ช่วยให้ซัพอร์ตผู้ใช้มากขึ้นและระบบจัดการฐานข้อมูลรูปแบบใหม่ที่ช่วยให้สามารถจัดการข้อมูลได้อย่างมีประสิทธิภาพไม่ว่าจะ Report insert delete update select สามารถทำให้ง่ายขึ้นอย่างมีประสิทธิภาพ </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-[11px] pt-2">
+                            <span class="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800">HTML/CSS/json</span>
+                            <span class="bg-cyan-950 text-cyan-300 px-2.5 py-1 rounded border border-cyan-800">Line Developers</span>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        function openModal(key) {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = modalData[key] || '<p class="text-cyan-400">NO DATA FOUND</p>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
